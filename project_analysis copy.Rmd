@@ -1,0 +1,239 @@
+---
+title: 'Stats 401: Analysis'
+author: "Lia Du"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r load_packages, warning = FALSE, message = FALSE}
+# use this code chunk to load any necessary packages
+library(ggplot2)
+library(GGally)
+library(gridExtra)
+library(car)
+```
+
+\newpage
+
+```{r read_data}
+# use this code chunk to read in your data set
+# note: you will need to move your data set into the "stats401_final_project" folder in order for this code chunk to run properly
+cancer <- read.csv("cancer_mortality_rates.csv")
+```
+
+\newpage
+
+## Figure 1
+
+```{r}
+ggplot(data = cancer, aes(x = cmRate)) +
+  geom_histogram(bins = 30, color = "black", fill = "lightblue") +
+  labs(title = "Histogram of Cancer Mortality Rate",
+       x = "Cancer Mortality Rate per 100,000",
+       y = "Frequency") +
+  theme_bw()
+```
+
+```{r}
+summary(cancer$cmRate)
+```
+
+```{r}
+sd(cancer$cmRate)
+```
+
+
+\newpage
+
+## Figure 2
+
+```{r}
+pairs(~ cmRate + pctPoverty + medianAge + pctUnemployed, data = cancer)
+```
+
+\newpage
+
+
+## Figure 3
+
+```{r}
+initial_model <- lm(cmRate ~ pctPoverty + medianAge + pctUnemployed + region, data = cancer)
+summary(initial_model)
+```
+
+```{r}
+plot(initial_model, which = 1)
+```
+
+```{r}
+plot(initial_model, which = 2)
+```
+
+\newpage
+
+## Figure 4
+
+```{r}
+g1 <- ggplot(data = cancer, aes(x = pctPoverty)) +
+  geom_histogram(bins = 30, color = "black", fill = "lightblue") +
+  labs(title = "Histogram of Poverty Rate",
+       x = "Poverty Rate (%)",
+       y = "Frequency") +
+  theme_bw()
+
+g2 <- ggplot(data = cancer, aes(x = log(pctPoverty))) +
+  geom_histogram(bins = 30, color = "black", fill = "lightblue") +
+  labs(title = "Histogram of log(Poverty Rate)",
+       x = "log(Poverty Rate) (%)",
+       y = "Frequency") +
+  theme_bw()
+
+grid.arrange(g1, g2, ncol = 2)
+```
+
+\newpage
+
+## Figure 5
+
+```{r}
+g1 <- ggplot(data = cancer, aes(x = pctUnemployed)) +
+  geom_histogram(bins = 30, color = "black", fill = "lightblue") +
+  labs(title = "Histogram of Unemployment Rate",
+       x = "Unemployment Rate (%)",
+       y = "Frequency") +
+  theme_bw()
+
+g2 <- ggplot(data = cancer, aes(x = log(pctUnemployed))) +
+  geom_histogram(bins = 30, color = "black", fill = "lightblue") +
+  labs(title = "Histogram of log(Unemployment Rate)",
+       x = "log(Unemployment Rate) (%)",
+       y = "Frequency") +
+  theme_bw()
+
+grid.arrange(g1, g2, ncol = 2)
+```
+
+\newpage
+
+## Figure 6
+
+```{r}
+pairs(~ cmRate + log(pctPoverty) + medianAge + log(pctUnemployed), data = cancer)
+```
+
+\newpage
+
+## Figure 7
+
+```{r}
+log_model <- lm(cmRate ~ log(pctPoverty) + medianAge + log(pctUnemployed) + region, data = cancer)
+summary(log_model)
+```
+
+```{r}
+plot(log_model, which = 1)
+```
+
+```{r}
+plot(log_model, which = 2)
+```
+
+\newpage
+
+## Figure 8
+
+```{r}
+ggplot(cancer, aes(x = log(pctPoverty), y = cmRate, color = factor(region), shape = factor(region))) +
+  
+  geom_point(size = 3, alpha = 0.7) +
+  
+  labs(title = "Cancer Mortality Rate vs. log(Poverty Rate) by Region",
+       x = "log(Poverty Rate)",
+       y = "Cancer Mortality Rate",
+       color = "Region",
+       shape = "Region") +
+  
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE) +
+  
+  theme_bw()
+```
+
+\newpage
+
+## Figure 9
+
+```{r}
+interaction_model <- lm(cmRate ~ log(pctPoverty) * region + medianAge + log(pctUnemployed), data = cancer)
+summary(interaction_model)
+```
+
+```{r}
+plot(interaction_model, which = 1)
+```
+
+```{r}
+plot(interaction_model, which = 2)
+```
+
+\newpage
+
+## Figure 10
+
+```{r}
+anova(log_model, interaction_model, test = "F")
+```
+
+\newpage
+
+## Figure 11
+
+```{r}
+add_pcths <- lm(cmRate ~ log(pctPoverty) + region + medianAge + log(pctUnemployed) + pctHS, data = cancer)
+summary(add_pcths)
+```
+
+\newpage
+
+## Figure 12
+
+```{r}
+add_pctmarryhouse <- lm(cmRate ~ log(pctPoverty) + medianAge + region + log(pctUnemployed) + pctHS + pctMarriedHouse, data = cancer)
+summary(add_pctmarryhouse)
+```
+
+
+\newpage
+
+## Figure 13
+
+```{r}
+final_model <- lm(cmRate ~ medianAge + log(pctUnemployed) + pctHS + pctMarriedHouse + region, data = cancer)
+summary(final_model)
+```
+
+```{r}
+plot(final_model, which = 1)
+```
+
+```{r}
+plot(final_model, which = 2)
+```
+
+
+\newpage
+
+## Figure 14
+
+```{r}
+vif(lm(cmRate ~ medianAge + log(pctUnemployed) + pctHS + pctMarriedHouse, data = cancer))
+```
+
+
